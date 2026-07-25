@@ -71,6 +71,10 @@ if (!animationFrame) {
 }
 
 const storageKey = "verity-local-tracker-config";
+const defaultTrackerConfig = {
+  contractAddress: "CUNmNyAnPAA3wkUTbqo1jvQWjvu9UDVkQdBBH1grpump",
+  chain: "Solana"
+};
 const contractInput = document.querySelector("#contractAddressInput");
 const chainSelect = document.querySelector("#chainSelect");
 const savedContractText = document.querySelector("#savedContractText");
@@ -113,36 +117,36 @@ function renderTradeFeed() {
 
 function updateTrackerUI(config) {
   if (savedContractText) {
-    savedContractText.textContent = config.contractAddress || "Not set";
+    savedContractText.textContent = config.contractAddress || defaultTrackerConfig.contractAddress;
   }
 
   if (savedChainText) {
-    savedChainText.textContent = config.chain || "Ethereum";
+    savedChainText.textContent = config.chain || defaultTrackerConfig.chain;
   }
 
   if (contractInput) {
-    contractInput.value = config.contractAddress || "";
+    contractInput.value = config.contractAddress || defaultTrackerConfig.contractAddress;
   }
 
   if (chainSelect) {
-    chainSelect.value = config.chain || "Ethereum";
+    chainSelect.value = config.chain || defaultTrackerConfig.chain;
   }
 }
 
 function loadTrackerConfig() {
   try {
     const rawConfig = window.localStorage.getItem(storageKey);
-    return rawConfig ? JSON.parse(rawConfig) : { contractAddress: "", chain: "Ethereum" };
+    return rawConfig ? JSON.parse(rawConfig) : defaultTrackerConfig;
   } catch {
-    return { contractAddress: "", chain: "Ethereum" };
+    return defaultTrackerConfig;
   }
 }
 
 if (saveTrackerConfigButton) {
   saveTrackerConfigButton.addEventListener("click", () => {
     const config = {
-      contractAddress: contractInput?.value.trim() || "",
-      chain: chainSelect?.value || "Ethereum"
+      contractAddress: contractInput?.value.trim() || defaultTrackerConfig.contractAddress,
+      chain: chainSelect?.value || defaultTrackerConfig.chain
     };
 
     window.localStorage.setItem(storageKey, JSON.stringify(config));
@@ -152,7 +156,7 @@ if (saveTrackerConfigButton) {
 
 if (clearTrackerConfigButton) {
   clearTrackerConfigButton.addEventListener("click", () => {
-    const config = { contractAddress: "", chain: "Ethereum" };
+    const config = defaultTrackerConfig;
     window.localStorage.removeItem(storageKey);
     updateTrackerUI(config);
   });

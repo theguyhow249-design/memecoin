@@ -72,7 +72,7 @@
             </div>
             <div>
               <dt>Chain</dt>
-              <dd>Ethereum</dd>
+              <dd>Solana</dd>
             </div>
           </dl>
         </div>
@@ -168,11 +168,11 @@
           </article>
           <article>
             <h3>Contract</h3>
-            <p>Standard ERC-20 with burn support. No extra admin minting controls added.</p>
+            <p>Live token address is now published on the site so visitors can verify the asset directly.</p>
           </article>
           <article>
             <h3>Launch</h3>
-            <p>Publish the live contract and pool links here, then keep updates centralized through X and Telegram.</p>
+            <p>Use the live Solana token address, explorer link, and social channels as the source of truth.</p>
           </article>
         </div>
       </section>
@@ -190,15 +190,15 @@
           <div class="tracker-controls">
             <label class="tracker-field">
               <span>Contract address</span>
-              <input id="contractAddressInput" type="text" placeholder="0x..." />
+              <input id="contractAddressInput" type="text" placeholder="CUNmNyAnPAA3wkUTbqo1jvQWjvu9UDVkQdBBH1grpump" />
             </label>
             <label class="tracker-field">
               <span>Chain</span>
               <select id="chainSelect">
+                <option value="Solana">Solana</option>
                 <option value="Ethereum">Ethereum</option>
                 <option value="Base">Base</option>
                 <option value="BSC">BSC</option>
-                <option value="Solana">Solana</option>
               </select>
             </label>
             <div class="tracker-actions">
@@ -207,9 +207,9 @@
             </div>
             <div class="tracker-status">
               <p class="tracker-label">Saved contract</p>
-              <p id="savedContractText" class="tracker-value">Not set</p>
+              <p id="savedContractText" class="tracker-value">CUNmNyAnPAA3wkUTbqo1jvQWjvu9UDVkQdBBH1grpump</p>
               <p class="tracker-label">Saved chain</p>
-              <p id="savedChainText" class="tracker-value">Ethereum</p>
+              <p id="savedChainText" class="tracker-value">Solana</p>
             </div>
           </div>
           <div class="tracker-dashboard">
@@ -263,8 +263,9 @@
           </a>
           <article id="contract" class="community-card contract-card">
             <span>Contract</span>
-            <strong>Verified address goes here</strong>
-            <p class="contract-placeholder">Add after deployment</p>
+            <strong>Live token address</strong>
+            <p class="contract-placeholder">CUNmNyAnPAA3wkUTbqo1jvQWjvu9UDVkQdBBH1grpump</p>
+            <p><a class="inline-link" href="https://solscan.io/token/CUNmNyAnPAA3wkUTbqo1jvQWjvu9UDVkQdBBH1grpump" target="_blank" rel="noreferrer">View on Solscan</a></p>
           </article>
         </div>
       </section>
@@ -276,15 +277,15 @@
             <h2>What this page supports once the token is live.</h2>
           </div>
           <ol class="steps">
-            <li>Deploy the token contract and verify it on your target network.</li>
-            <li>Replace the contract placeholder with the live address and relevant explorer link.</li>
-            <li>Publish liquidity venue links and keep announcements routed through the linked social channels.</li>
+            <li>Use the live token address as the canonical contract reference across the site.</li>
+            <li>Link the Solscan page and liquidity venue once the trading pair is finalized.</li>
+            <li>Keep announcements routed through the linked social channels.</li>
           </ol>
         </div>
         <div class="contract-callout">
           <p class="eyebrow">Ready State</p>
           <p class="contract-label">Current status</p>
-          <p class="contract-placeholder">Branding and site are ready. Contract address pending.</p>
+          <p class="contract-placeholder">Live address added. Explorer link is now public.</p>
         </div>
       </section>
 
@@ -332,7 +333,7 @@
           </details>
           <details>
             <summary>What is still missing before this feels complete?</summary>
-            <p>The main missing item is the live contract address and any explorer or liquidity links you want displayed beside it.</p>
+            <p>The next missing pieces are live liquidity links and a real transaction feed connected to the token address.</p>
           </details>
         </div>
       </section>

@@ -784,6 +784,12 @@ h2 {
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
+.inline-link {
+  color: var(--ink);
+  font-weight: 700;
+  text-decoration: none;
+}
+
 .contract-card {
   cursor: default;
 }
