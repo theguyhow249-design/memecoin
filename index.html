@@ -210,25 +210,27 @@
               <p id="savedContractText" class="tracker-value">CUNmNyAnPAA3wkUTbqo1jvQWjvu9UDVkQdBBH1grpump</p>
               <p class="tracker-label">Saved chain</p>
               <p id="savedChainText" class="tracker-value">Solana</p>
+              <p class="tracker-label">Pool</p>
+              <p id="savedPoolText" class="tracker-value">Loading...</p>
             </div>
           </div>
           <div class="tracker-dashboard">
             <div class="tracker-metrics">
               <article>
                 <span>Price</span>
-                <strong>$0.000042</strong>
+                <strong id="metricPrice">$0.00</strong>
               </article>
               <article>
                 <span>24H Volume</span>
-                <strong>$184.2K</strong>
+                <strong id="metricVolume">$0.00</strong>
               </article>
               <article>
                 <span>Liquidity</span>
-                <strong>$96.8K</strong>
+                <strong id="metricLiquidity">$0.00</strong>
               </article>
               <article>
-                <span>Holders</span>
-                <strong>1,248</strong>
+                <span>Buys / Sells</span>
+                <strong id="metricTxns">0 / 0</strong>
               </article>
             </div>
             <div class="tracker-feed-card">
@@ -237,7 +239,7 @@
                   <p class="eyebrow">Trade Feed</p>
                   <h3>Recent buys and sells</h3>
                 </div>
-                <p class="tracker-note">Local preview data for now</p>
+                <p id="trackerNote" class="tracker-note">Loading live data...</p>
               </div>
               <div id="tradeFeed" class="trade-feed"></div>
             </div>

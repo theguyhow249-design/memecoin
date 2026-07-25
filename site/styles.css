@@ -558,6 +558,7 @@ h2 {
 .tracker-copy,
 .tracker-note,
 .tracker-label,
+.tracker-empty,
 .trade-wallet,
 .trade-tokens,
 .trade-time {
@@ -675,6 +676,14 @@ h2 {
 .trade-feed {
   display: grid;
   gap: 0.75rem;
+}
+
+.tracker-empty {
+  margin: 0;
+  border: 1px dashed var(--line);
+  border-radius: 18px;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.35);
 }
 
 .trade-row {

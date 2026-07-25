@@ -79,30 +79,85 @@ const contractInput = document.querySelector("#contractAddressInput");
 const chainSelect = document.querySelector("#chainSelect");
 const savedContractText = document.querySelector("#savedContractText");
 const savedChainText = document.querySelector("#savedChainText");
+const savedPoolText = document.querySelector("#savedPoolText");
 const saveTrackerConfigButton = document.querySelector("#saveTrackerConfig");
 const clearTrackerConfigButton = document.querySelector("#clearTrackerConfig");
 const tradeFeed = document.querySelector("#tradeFeed");
+const metricPrice = document.querySelector("#metricPrice");
+const metricVolume = document.querySelector("#metricVolume");
+const metricLiquidity = document.querySelector("#metricLiquidity");
+const metricTxns = document.querySelector("#metricTxns");
+const trackerNote = document.querySelector("#trackerNote");
 
-const sampleTrades = [
-  { side: "BUY", wallet: "0x7ad1...e11f", amount: "3.40 ETH", tokens: "8.1M VRT", time: "9 sec ago" },
-  { side: "SELL", wallet: "0x51fe...c902", amount: "0.82 ETH", tokens: "1.9M VRT", time: "21 sec ago" },
-  { side: "BUY", wallet: "0xd0a4...fa19", amount: "1.16 ETH", tokens: "2.7M VRT", time: "44 sec ago" },
-  { side: "BUY", wallet: "0x39c2...8aa0", amount: "5.02 ETH", tokens: "11.8M VRT", time: "1 min ago" },
-  { side: "SELL", wallet: "0xc11b...e2a7", amount: "0.49 ETH", tokens: "1.1M VRT", time: "2 min ago" }
-];
+let activeTrackerInterval = null;
 
-function renderTradeFeed() {
+function formatCompactNumber(value, maximumFractionDigits = 2) {
+  const numericValue = Number(value || 0);
+  return new Intl.NumberFormat("en-US", {
+    notation: "compact",
+    maximumFractionDigits
+  }).format(numericValue);
+}
+
+function formatUsd(value, maximumFractionDigits = 2) {
+  const numericValue = Number(value || 0);
+
+  if (numericValue > 0 && numericValue < 0.01) {
+    return `$${numericValue.toFixed(8)}`;
+  }
+
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits
+  }).format(numericValue);
+}
+
+function shortenAddress(address) {
+  if (!address || address.length < 12) {
+    return address || "Unknown";
+  }
+
+  return `${address.slice(0, 6)}...${address.slice(-6)}`;
+}
+
+function relativeTime(timestamp) {
+  const seconds = Math.max(0, Math.floor((Date.now() - new Date(timestamp).getTime()) / 1000));
+
+  if (seconds < 60) {
+    return `${seconds} sec ago`;
+  }
+
+  if (seconds < 3600) {
+    return `${Math.floor(seconds / 60)} min ago`;
+  }
+
+  return `${Math.floor(seconds / 3600)} hr ago`;
+}
+
+function setTrackerMessage(message) {
+  if (trackerNote) {
+    trackerNote.textContent = message;
+  }
+}
+
+function renderTradeFeed(trades) {
   if (!tradeFeed) {
     return;
   }
 
-  tradeFeed.innerHTML = sampleTrades
+  if (!trades.length) {
+    tradeFeed.innerHTML = '<p class="tracker-empty">No recent trades returned yet.</p>';
+    return;
+  }
+
+  tradeFeed.innerHTML = trades
     .map(
       (trade) => `
         <article class="trade-row trade-row-${trade.side.toLowerCase()}">
           <div>
             <p class="trade-side">${trade.side}</p>
-            <p class="trade-wallet">${trade.wallet}</p>
+            <p class="trade-wallet">${shortenAddress(trade.wallet)}</p>
           </div>
           <div>
             <p class="trade-amount">${trade.amount}</p>
@@ -113,6 +168,114 @@ function renderTradeFeed() {
       `
     )
     .join("");
+}
+
+function updateMetricElements({ priceUsd, volumeUsd24h, liquidityUsd, buys24h, sells24h, poolAddress }) {
+  if (metricPrice) {
+    metricPrice.textContent = formatUsd(priceUsd, 8);
+  }
+
+  if (metricVolume) {
+    metricVolume.textContent = formatUsd(volumeUsd24h);
+  }
+
+  if (metricLiquidity) {
+    metricLiquidity.textContent = formatUsd(liquidityUsd);
+  }
+
+  if (metricTxns) {
+    metricTxns.textContent = `${buys24h} / ${sells24h}`;
+  }
+
+  if (savedPoolText) {
+    savedPoolText.textContent = poolAddress ? shortenAddress(poolAddress) : "Not found";
+  }
+}
+
+async function fetchJson(url) {
+  const response = await fetch(url, {
+    headers: {
+      Accept: "application/json"
+    }
+  });
+
+  if (!response.ok) {
+    throw new Error(`Request failed: ${response.status}`);
+  }
+
+  return response.json();
+}
+
+async function loadLiveTracker(config) {
+  const contractAddress = config.contractAddress?.trim();
+
+  if (!contractAddress) {
+    updateMetricElements({
+      priceUsd: 0,
+      volumeUsd24h: 0,
+      liquidityUsd: 0,
+      buys24h: 0,
+      sells24h: 0,
+      poolAddress: ""
+    });
+    renderTradeFeed([]);
+    setTrackerMessage("Enter a contract address to load live data.");
+    return;
+  }
+
+  setTrackerMessage("Loading live data...");
+
+  try {
+    const [dexData, geckoData] = await Promise.all([
+      fetchJson(`https://api.dexscreener.com/latest/dex/tokens/${contractAddress}`),
+      fetchJson(`https://api.geckoterminal.com/api/v2/networks/solana/tokens/${contractAddress}`)
+    ]);
+
+    const pair = dexData.pairs?.[0];
+    const topPoolId = geckoData.data?.relationships?.top_pools?.data?.[0]?.id;
+    const poolAddress = topPoolId?.split("solana_")[1] || pair?.pairAddress || "";
+
+    if (!pair || !poolAddress) {
+      throw new Error("No live pair found for this token.");
+    }
+
+    const tradesData = await fetchJson(
+      `https://api.geckoterminal.com/api/v2/networks/solana/pools/${poolAddress}/trades`
+    );
+
+    updateMetricElements({
+      priceUsd: pair.priceUsd,
+      volumeUsd24h: pair.volume?.h24,
+      liquidityUsd: geckoData.data?.attributes?.total_reserve_in_usd,
+      buys24h: pair.txns?.h24?.buys || 0,
+      sells24h: pair.txns?.h24?.sells || 0,
+      poolAddress
+    });
+
+    const trades = (tradesData.data || []).slice(0, 8).map((trade) => {
+      const attributes = trade.attributes || {};
+      const isBuy = attributes.kind === "buy";
+      const quoteSymbol = pair.quoteToken?.symbol || "QUOTE";
+      const baseSymbol = pair.baseToken?.symbol || "TOKEN";
+      const quoteAmount = Number(isBuy ? attributes.from_token_amount : attributes.to_token_amount || 0);
+      const baseAmount = Number(isBuy ? attributes.to_token_amount : attributes.from_token_amount || 0);
+
+      return {
+        side: isBuy ? "BUY" : "SELL",
+        wallet: attributes.tx_from_address,
+        amount: `${quoteAmount.toFixed(4)} ${quoteSymbol}`,
+        tokens: `${formatCompactNumber(baseAmount, 2)} ${baseSymbol}`,
+        time: relativeTime(attributes.block_timestamp)
+      };
+    });
+
+    renderTradeFeed(trades);
+    setTrackerMessage(`Live data from public Dexscreener and GeckoTerminal APIs.`);
+  } catch (error) {
+    console.error(error);
+    renderTradeFeed([]);
+    setTrackerMessage("Live data request failed. Check the token address and try again.");
+  }
 }
 
 function updateTrackerUI(config) {
@@ -151,6 +314,7 @@ if (saveTrackerConfigButton) {
 
     window.localStorage.setItem(storageKey, JSON.stringify(config));
     updateTrackerUI(config);
+    loadLiveTracker(config);
   });
 }
 
@@ -159,8 +323,19 @@ if (clearTrackerConfigButton) {
     const config = defaultTrackerConfig;
     window.localStorage.removeItem(storageKey);
     updateTrackerUI(config);
+    loadLiveTracker(config);
   });
 }
 
-renderTradeFeed();
-updateTrackerUI(loadTrackerConfig());
+const initialTrackerConfig = loadTrackerConfig();
+
+updateTrackerUI(initialTrackerConfig);
+loadLiveTracker(initialTrackerConfig);
+
+if (activeTrackerInterval) {
+  window.clearInterval(activeTrackerInterval);
+}
+
+activeTrackerInterval = window.setInterval(() => {
+  loadLiveTracker(loadTrackerConfig());
+}, 30000);
